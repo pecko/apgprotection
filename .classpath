@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="libdir/aspicore.jar"/>
+	<classpathentry kind="lib" path="libdir/astra.jar"/>
+	<classpathentry kind="lib" path="libdir/dmtpserv.jar"/>
+	<classpathentry kind="lib" path="libdir/gtsdb.jar"/>
+	<classpathentry kind="lib" path="libdir/gtsdmtp.jar"/>
+	<classpathentry kind="lib" path="libdir/gtsutils.jar"/>
+	<classpathentry kind="lib" path="libdir/icare.jar"/>
+	<classpathentry kind="lib" path="libdir/lantrix.jar"/>
+	<classpathentry kind="lib" path="libdir/sipgear.jar"/>
+	<classpathentry kind="lib" path="libdir/taip.jar"/>
+	<classpathentry kind="lib" path="libdir/template.jar"/>
+	<classpathentry kind="lib" path="libdir/tk10x.jar"/>
+	<classpathentry kind="lib" path="libdir/tools.jar"/>
+	<classpathentry kind="lib" path="libdir/warmaps.jar"/>
+	<classpathentry kind="lib" path="libdir/wartools.jar"/>
+	<classpathentry kind="lib" path="libdir/javax.mail.jar"/>
+	<classpathentry kind="lib" path="/usr/local/apache-tomcat-7.0.54/lib/jsp-api.jar"/>
+	<classpathentry kind="lib" path="/usr/local/apache-tomcat-7.0.54/lib/servlet-api.jar"/>
+	<classpathentry kind="output" path="build"/>
+</classpath>
