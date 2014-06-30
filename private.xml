@@ -981,7 +981,7 @@ Notes:
      ===   (Make sure you let them know you are using it with 'OpenGTS'!)
      -->
     <ReverseGeocodeProvider name="geonames" 
-        active="${Domain.ReverseGeocodeProvider.active=false}"
+        active="${Domain.ReverseGeocodeProvider.active=true}"
         class="org.opengts.geocoder.geonames.GeoNames"
         key=""
         rtPropPrefix="Domain.ReverseGeocodeProvider.">

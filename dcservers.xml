@@ -106,6 +106,52 @@
         
     </DCServer>
 
+    <DCServer name="gl200">
+    
+        <!--
+         === DCS Description
+         -->
+        <Description><![CDATA[
+            Queclink GL200
+            ]]></Description>
+            
+        <!-- 
+         === Possible Unique-ID prefixes ("*" means that the mobile-id is used as-is)
+         === Example: If the mobile-id is "123456789012345", then the "Unique ID" value
+         === set in the Device admin page can be one of the following:
+         ===   imei_123456789012345
+         ===   123456789012345
+         ===   <etc.>
+         -->
+        <UniqueIDPrefix><![CDATA[
+            gl2_
+            imei_
+            *
+            ]]></UniqueIDPrefix>
+            
+        <!-- 
+         === Listen ports
+         -->
+        <ListenPorts 
+            tcpPort="5003" 
+            udpPort="5003"
+            />
+            
+        <!--
+         === DCS runtime properties
+         -->
+        <Properties>
+            <!-- <Property key="parseFormat">1</Property>               -->
+            <!-- <Property key="minimumSpeedKPH">3.0</Property>         -->
+            <!-- <Property key="estimateOdometer">true</Property>       -->
+            <!-- <Property key="simulateGeozones">true</Property>       -->
+            <!-- <Property key="simulateDigitalInputs">0xFF</Property>  -->
+            <!-- <Property key="tcpIdleTimeoutMS">5000</Property>       -->
+            <!-- <Property key="tcpPacketTimeoutMS">10000</Property>    -->
+            <!-- <Property key="tcpSessionTimeoutMS">20000</Property>   -->
+            </Properties>
+        
+    </DCServer>
     <!-- ================================================================================ -->
     <DCServer name="gtsdmtp">
     

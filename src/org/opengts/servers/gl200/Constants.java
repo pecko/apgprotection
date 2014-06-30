@@ -47,7 +47,7 @@ public class Constants
     /* title */
     // Displayed at server startup
     public static final String  TITLE_NAME              = "GL200";
-    public static final String  VERSION                 = "0.2.8"; // 2.4.9-B22
+    public static final String  VERSION                 = "0.1.0"; 
     public static final String  COPYRIGHT               = Version.COPYRIGHT;
     
     // ------------------------------------------------------------------------
@@ -79,7 +79,7 @@ public class Constants
     // The maximum expected packet length
     // This value simply provide an upper limit for the maximum length of any single  
     // packet that is expected to be received from the client device.
-    public static final int     MAX_PACKET_LENGTH       = 600;
+    public static final int     MAX_PACKET_LENGTH       = 160;
     
     /* terminate flags */
     // Set to 'true' to close the session on a read timeout

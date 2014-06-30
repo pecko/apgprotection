@@ -92,18 +92,35 @@
 // ----------------------------------------------------------------------------
 package org.opengts.servers.gl200;
 
-import java.lang.*;
-import java.util.*;
-import java.io.*;
-import java.net.*;
-import java.sql.*;
+import java.io.EOFException;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.TimeZone;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-import org.opengts.util.*;
-import org.opengts.dbtools.*;
-import org.opengts.db.*;
-import org.opengts.db.tables.*;
-
-import org.opengts.servers.*;
+import org.opengts.db.DBConfig;
+import org.opengts.db.DCServerConfig;
+import org.opengts.db.DCServerFactory;
+import org.opengts.db.StatusCodes;
+import org.opengts.db.tables.Device;
+import org.opengts.servers.GPSEvent;
+import org.opengts.util.AbstractClientPacketHandler;
+import org.opengts.util.DateTime;
+import org.opengts.util.FileTools;
+import org.opengts.util.GeoPoint;
+import org.opengts.util.Nmea0183;
+import org.opengts.util.Print;
+import org.opengts.util.RTConfig;
+import org.opengts.util.RTProperties;
+import org.opengts.util.ServerSocketThread;
+import org.opengts.util.StringTools;
 
 /**
 *** <code>TrackClientPacketHandler</code> - This module contains the general
@@ -266,6 +283,25 @@ public class TrackClientPacketHandler
     private String          ipAddress                   = null;
     private int             clientPort                  = 0;
 
+    private static final Pattern pattern = Pattern.compile(
+            "\\+RESP:GT...," +
+            "[0-9a-fA-F]{6}," +                 // Protocol version
+            "(\\d{15}),.*," +                   // IMEI
+            "(\\d*)," +                         // GPS accuracy
+            "(\\d+.\\d)," +                     // Speed
+            "(\\d+)," +                         // Course
+            "(-?\\d+\\.\\d)," +                 // Altitude
+            "(-?\\d+\\.\\d+)," +                // Longitude
+            "(-?\\d+\\.\\d+)," +                // Latitude
+            "(\\d{4})(\\d{2})(\\d{2})" +        // Date (YYYYMMDD)
+            "(\\d{2})(\\d{2})(\\d{2})," +       // Time (HHMMSS)
+            "(\\d{4})," +                       // MCC
+            "(\\d{4})," +                       // MNC
+            "(\\p{XDigit}{4})," +               // LAC
+            "(\\p{XDigit}{4})," +               // Cell
+            "(?:.*,(\\d{1,3}),\\d{14},)?" +     // Battery
+            ".*");
+    
     /* packet handler constructor */
     public TrackClientPacketHandler() 
     {
@@ -712,22 +748,9 @@ public class TrackClientPacketHandler
     /* parse and insert data record */
     private byte[] parseInsertRecord_ASCII_01(String s)
     {
-        // This is an example showing how the server might parse one type of ASCII encoded data.
-        // Since every Device utilizes a different data format, this will likely not match the
-        // format coming from your chosen Device and may need some significant changes to support
-        // the format provided by your evice (assuming that the format is even ASCII).
-        //
-        // This parsing method assumes the data format appears as follows:
-        //   <MobileID>,<YYYY/MM/DD>,<HH:MM:SS>,<Latitude>,<Longitude>,<Speed>,<Heading>,<AltitudeM>
-        //   0--------- 1----------- 2--------- 3--------- 4---------- 5------ 6-------- 7----------
-        //   |          |            |          |          |           |       |> Heading (degrees)
-        //   |          |            |          |          |           |> Speed (km/h)
-        //   |          |            |          |          |> Longitude (degrees)
-        //   |          |            |          |> Latitude (degrees)
-        //   |          |            |> Time [GMT]
-        //   |          |> Date [GMT]
-        //   |> MobileID/IMEI
-        //
+        //  +RESP:GTFRI,1A0102,860599000037127,,0,0,1,2,45.7,13,132.1,-2.141259,53.556792,20140629165155,0234,0010,207C,8A53,,83,20140629165442,03C2
+        //  +RESP:GTFRI,020103,867844000042286,,0,0,1,2,,,,-2.159175,53.567314,20140629223151,,,,,,81,,0022
+    	// +RESP:GTSTT,020103,867844000042286,,41,0,2.1,0,145.9,-2.159407,53.567288,20140629211603,0234,0010,207C,6343,00,20140629211842,3462
         Print.logInfo("Parsing: " + s);
 
         /* pre-validate */
@@ -735,23 +758,98 @@ public class TrackClientPacketHandler
             Print.logError("String is null");
             return null;
         }
+        
+        String sentence = (String) s;
 
-        /* parse to fields */
-        String fld[] = StringTools.parseStringArray(s,',');
-        if ((fld == null) || (fld.length < 5)) {
-            Print.logWarn("Invalid number of fields");
-            return null;
+        String[] fields = sentence.split(",");
+        if (fields == null || fields.length != 22 || fields[0] == null || !fields[0].startsWith("+RESP:GT")) {
+        	Print.logError("Unknown string:" + s);
+        	return null;
         }
+        // Parse message
+//        Matcher parser = pattern.matcher(sentence);
+//        if (!parser.matches()) {
+//        	Print.logError("Unknown string:" + s);
+//        	return null;
+//        }
+        
+        //Integer index = 1;
 
-        /* parse individual fields */
-        String   modemID    = fld[0].toLowerCase();
-        long     fixtime    = this._parseDate(fld[1],fld[2]);
+        //String imei = parser.group(index++);
+        
+        String imei = fields[2];
+        
+        //Integer valid = Integer.valueOf(parser.group(index++));
+
+        // Position info
+//        Double speed = Double.valueOf(parser.group(index++));
+//        Double course = Double.valueOf(parser.group(index++));
+//        Double altitude = Double.valueOf(parser.group(index++));
+//        Double longitude = Double.valueOf(parser.group(index++));
+//        Double latitude = Double.valueOf(parser.group(index++));
+
+        Double speed = new Double(0.0);
+		try {
+			speed = Double.valueOf(fields[8]);
+		} catch (NumberFormatException e) {
+			//ignore
+		}
+		Double course = new Double(0.0);
+		try {
+			course = Double.valueOf(fields[9]);
+		} catch (NumberFormatException e) {
+			// ignore
+		}
+		Double altitude = new Double(0.0);
+		
+        try {
+			altitude = Double.valueOf(fields[10]);
+		} catch (NumberFormatException e) {
+			// ignore
+		}
+        Double longitude = new Double(0.0);;
+		try {
+			longitude = Double.valueOf(fields[11]);
+		} catch (NumberFormatException e) {
+			// ignore FIXME
+		}
+        Double latitude = new Double(0.0);
+		try {
+			latitude = Double.valueOf(fields[12]);
+		} catch (NumberFormatException e1) {
+			// ignore FIXME
+		}
+
+        // Date
+//        Calendar time = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+//        time.clear();
+//        time.set(Calendar.YEAR, Integer.valueOf(parser.group(index++)));
+//        time.set(Calendar.MONTH, Integer.valueOf(parser.group(index++)) - 1);
+//        time.set(Calendar.DAY_OF_MONTH, Integer.valueOf(parser.group(index++)));
+//
+//        // Time
+//        time.set(Calendar.HOUR_OF_DAY, Integer.valueOf(parser.group(index++)));
+//        time.set(Calendar.MINUTE, Integer.valueOf(parser.group(index++)));
+//        time.set(Calendar.SECOND, Integer.valueOf(parser.group(index++)));
+        String dateString = fields[13];
+        Date date;
+		try {
+			date = new SimpleDateFormat("yyyyMMddHHmmss").parse(dateString);
+		} catch (ParseException e) {
+			Print.logError("Invalid date:" + dateString);
+        	return null;
+		}
+        //Date date = time.getTime();
+
+        String   modemID    = imei;
+        long     fixtime    = date.getTime();
+        fixtime = fixtime/1000;
         int      statusCode = StatusCodes.STATUS_LOCATION;
-        double   latitude   = StringTools.parseDouble(fld[3],0.0);
-        double   longitude  = StringTools.parseDouble(fld[4],0.0);
-        double   speedKPH   = (fld.length > 5)? StringTools.parseDouble(fld[5],0.0) : 0.0;
-        double   heading    = (fld.length > 6)? StringTools.parseDouble(fld[6],0.0) : 0.0;
-        double   altitudeM  = (fld.length > 7)? StringTools.parseDouble(fld[7],0.0) : 0.0;
+        //double   latitude   = StringTools.parseDouble(fld[3],0.0);
+        //double   longitude  = StringTools.parseDouble(fld[4],0.0);
+        //double   speedKPH   = (fld.length > 5)? StringTools.parseDouble(fld[5],0.0) : 0.0;
+        //double   heading    = (fld.length > 6)? StringTools.parseDouble(fld[6],0.0) : 0.0;
+        //double   altitudeM  = (fld.length > 7)? StringTools.parseDouble(fld[7],0.0) : 0.0;
 
         /* GPS Event */
         this.gpsEvent = this.createGPSEvent(modemID);
@@ -765,9 +863,9 @@ public class TrackClientPacketHandler
         this.gpsEvent.setStatusCode(statusCode);
         this.gpsEvent.setLatitude(latitude);
         this.gpsEvent.setLongitude(longitude);
-        this.gpsEvent.setSpeedKPH(speedKPH);
-        this.gpsEvent.setHeading(heading);
-        this.gpsEvent.setAltitude(altitudeM);
+        this.gpsEvent.setSpeedKPH(speed);
+        //this.gpsEvent.setHeading(heading);
+        this.gpsEvent.setAltitude(altitude);
         
         /* insert/return */
         if (this.parseInsertRecord_Common(this.gpsEvent)) {
@@ -913,7 +1011,7 @@ public class TrackClientPacketHandler
         }
 
         /* populate GPS event fields */
-        this.gpsEvent.setTimestamp(fixtime);
+        this.gpsEvent.setTimestamp(fixtime/1000);
         this.gpsEvent.setStatusCode(statusCode);
         this.gpsEvent.setLatitude(latitude);
         this.gpsEvent.setLongitude(longitude);
