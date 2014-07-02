@@ -102,7 +102,7 @@ File     : build.xml
 	</target>
 
 	<!-- Target: compile.servers -->
-	<target name="compile.servers" depends="compile.base,gtsdmtp,icare,aspicore,astra,tk10x,sipgear,taip,lantrix,template" 
+	<target name="compile.servers" depends="compile.base,gtsdmtp,icare,aspicore,astra,tk10x,sipgear,taip,lantrix,template,gl200" 
     description="Build Servers">
 		<echo message="Servers compiled ..."/>
 	</target>

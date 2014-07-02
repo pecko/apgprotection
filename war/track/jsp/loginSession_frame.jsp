@@ -74,7 +74,7 @@ response.setDateHeader("EXPIRES"  , 0         );
         font-size: 28pt;
         font-weight: bold;
         text-align: center;
-        color: #000000;
+        color: gray;
     }
   </style>
 

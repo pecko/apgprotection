@@ -120,7 +120,7 @@ response.setDateHeader("EXPIRES"  , 0         );
         font-size: 18pt;
         font-weight: bold;
         text-align: center;
-        color: #000000;
+        color: gray;
     }
   </style>
 
@@ -149,7 +149,7 @@ response.setDateHeader("EXPIRES"  , 0         );
       <gts:var>
       <td class="titleText" valign="center">
         ${pageTitle}<br>
-        <font style="font-size: 8pt;"><i>(Powered by <a href="http://www.opengts.org" target="_blank" style="color:#444444;">OpenGTS</a>)</i></font>
+        <font style="font-size: 8pt;"><i>(Powered by <a href="http://www.apgprotection.com" target="_blank" style="color:#444444;">APGProtection</a>)</i></font>
       </td>
       </gts:var>
 
